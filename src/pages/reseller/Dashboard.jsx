@@ -138,6 +138,7 @@ const ResellerDashboard = () => {
     const daysMap = {
       '1 Day':    1,
       '7 Days':   7,
+      '10 Days':  10,
       '15 Days':  15,
       '30 Days':  30,
       '365 Days': 365,
@@ -172,11 +173,12 @@ const ResellerDashboard = () => {
 
   // ── All price plans in correct order ────────────────────────────────
   const allPricePlans = [
-    { field: 'oneDay',      duration: '1 Day'   },
-    { field: 'sevenDays',   duration: '7 Days'  },
-    { field: 'fifteenDays', duration: '15 Days' },
-    { field: 'thirtyDays',  duration: '30 Days' },
-    { field: 'oneYear',     duration: '365 Days'},
+    { field: 'oneDay',      duration: '1 Day'    },
+    { field: 'sevenDays',   duration: '7 Days'   },
+    { field: 'tenDays',     duration: '10 Days'  },
+    { field: 'fifteenDays', duration: '15 Days'  },
+    { field: 'thirtyDays',  duration: '30 Days'  },
+    { field: 'oneYear',     duration: '365 Days' },
   ];
 
   return (
@@ -380,7 +382,6 @@ const ResellerDashboard = () => {
                 </div>
               )}
               {softwareList.map((soft, si) => {
-                // Build plan list dynamically — only show plans that have a price set
                 const plans = allPricePlans
                   .map(p => soft.prices?.[p.field] ? { duration: p.duration, price: soft.prices[p.field] } : null)
                   .filter(Boolean);

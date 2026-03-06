@@ -9,6 +9,7 @@ const AddSoftware = () => {
   const [name, setName]               = useState('');
   const [price1, setPrice1]           = useState('');
   const [price7, setPrice7]           = useState('');
+  const [price10, setPrice10]         = useState('');
   const [price15, setPrice15]         = useState('');
   const [price30, setPrice30]         = useState('');
   const [price365, setPrice365]       = useState('');
@@ -61,7 +62,7 @@ const AddSoftware = () => {
       return;
     }
     // At least one price must be set
-    if (!price1 && !price7 && !price15 && !price30 && !price365) {
+    if (!price1 && !price7 && !price10 && !price15 && !price30 && !price365) {
       alert("Please set at least one pricing plan.");
       return;
     }
@@ -87,6 +88,7 @@ const AddSoftware = () => {
         prices: {
           oneDay:      price1   ? parseFloat(price1)   : null,
           sevenDays:   price7   ? parseFloat(price7)   : null,
+          tenDays:     price10  ? parseFloat(price10)  : null,
           fifteenDays: price15  ? parseFloat(price15)  : null,
           thirtyDays:  price30  ? parseFloat(price30)  : null,
           oneYear:     price365 ? parseFloat(price365) : null,
@@ -123,11 +125,12 @@ const AddSoftware = () => {
   };
 
   const pricingFields = [
-    { key: 'p1',   label: '1 Day ($)',   value: price1,   setter: setPrice1,   required: false },
-    { key: 'p7',   label: '7 Days ($)',  value: price7,   setter: setPrice7,   required: false },
-    { key: 'p15',  label: '15 Days ($)', value: price15,  setter: setPrice15,  required: false },
-    { key: 'p30',  label: '30 Days ($)', value: price30,  setter: setPrice30,  required: false },
-    { key: 'p365', label: '365 Days ($)',value: price365, setter: setPrice365, required: false },
+    { key: 'p1',   label: '1 Day ($)',   value: price1,   setter: setPrice1   },
+    { key: 'p7',   label: '7 Days ($)',  value: price7,   setter: setPrice7   },
+    { key: 'p10',  label: '10 Days ($)', value: price10,  setter: setPrice10  },
+    { key: 'p15',  label: '15 Days ($)', value: price15,  setter: setPrice15  },
+    { key: 'p30',  label: '30 Days ($)', value: price30,  setter: setPrice30  },
+    { key: 'p365', label: '365 Days ($)',value: price365, setter: setPrice365 },
   ];
 
   return (
@@ -321,7 +324,7 @@ const AddSoftware = () => {
                   <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'11px', color:'rgba(107,114,128,0.5)', fontWeight:300 }}>(at least one required)</span>
                 </div>
 
-                <div className="price-grid" style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'12px' }}>
+                <div className="price-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'12px' }}>
                   {pricingFields.map(field => (
                     <div key={field.key}>
                       <label style={{ ...labelStyle, color: 'rgba(156,163,175,0.7)' }}>

@@ -24,6 +24,7 @@ const EditKeyModal = ({ keyItem, softwareList, onClose, onSave }) => {
   const allPlans = [
     { label: '1 Day',    value: '1 Day',    field: 'oneDay' },
     { label: '7 Days',   value: '7 Days',   field: 'sevenDays' },
+    { label: '10 Days',  value: '10 Days',  field: 'tenDays' },
     { label: '15 Days',  value: '15 Days',  field: 'fifteenDays' },
     { label: '30 Days',  value: '30 Days',  field: 'thirtyDays' },
     { label: '365 Days', value: '365 Days', field: 'oneYear' },
@@ -100,7 +101,7 @@ const EditKeyModal = ({ keyItem, softwareList, onClose, onSave }) => {
             {allPlans.length > 0 && (
               <div>
                 <label style={lbl}>Duration</label>
-                <div style={{ display:'grid', gridTemplateColumns:`repeat(${Math.min(allPlans.length,5)},1fr)`, gap:'7px' }}>
+                <div style={{ display:'grid', gridTemplateColumns:`repeat(${Math.min(allPlans.length,3)},1fr)`, gap:'7px' }}>
                   {allPlans.map(plan => (
                     <label key={plan.value} onClick={()=>setDuration(plan.value)} style={{ cursor:'pointer', borderRadius:'8px', padding:'7px 4px 6px', textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center', gap:'2px', border: duration===plan.value ? '1px solid rgba(124,58,237,0.75)' : '1px solid rgba(55,48,80,0.65)', background: duration===plan.value ? 'rgba(124,58,237,0.13)' : 'rgba(6,6,18,0.8)', boxShadow: duration===plan.value ? '0 0 0 2px rgba(124,58,237,0.18)' : 'none', transition:'all 0.15s', userSelect:'none' }}>
                       <input type="radio" name="edit-dur" value={plan.value} onChange={()=>setDuration(plan.value)} style={{display:'none'}}/>
@@ -144,7 +145,7 @@ const EditKeyModal = ({ keyItem, softwareList, onClose, onSave }) => {
 const DeleteModal = ({ keyItem, onClose, onConfirm }) => (
   <div onClick={onClose} style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.75)', backdropFilter:'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center', padding:'16px', animation:'fadeIn 0.18s ease' }}>
     <div onClick={e=>e.stopPropagation()} style={{ width:'100%', maxWidth:'380px', background:'linear-gradient(160deg,rgba(18,14,38,0.99),rgba(10,8,24,1))', border:'1px solid rgba(248,113,113,0.2)', borderRadius:'20px', boxShadow:'0 40px 100px rgba(0,0,0,0.7)', overflow:'hidden', animation:'slideUp 0.22s cubic-bezier(.16,1,.3,1)' }}>
-      <div style={{ height:'1px', background:'linear-gradient(90deg,transparent 5%,rgba(248,113,113,0.4) 50%,transparent 95%)' }}/>
+      <div style={{ height:'1px', background:'linear-gradient(90deg,transparent 5%,rgba(248,113,113,0.4) 50%,transparent 95%)'}}/>
       <div style={{ padding:'24px 26px 22px' }}>
         <div style={{ display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px' }}>
           <div style={{ width:'42px', height:'42px', borderRadius:'12px', background:'rgba(248,113,113,0.1)', border:'1px solid rgba(248,113,113,0.25)', display:'flex', alignItems:'center', justifyContent:'center', color:'#f87171' }}><Trash2 size={18}/></div>
@@ -208,9 +209,12 @@ const Keys = () => {
   };
 
   const plans = [
-    {field:'oneDay',label:'1 Day',dur:'1 Day'},{field:'sevenDays',label:'7 Days',dur:'7 Days'},
-    {field:'fifteenDays',label:'15 Days',dur:'15 Days'},{field:'thirtyDays',label:'30 Days',dur:'30 Days'},
-    {field:'oneYear',label:'365 Days',dur:'365 Days'},
+    {field:'oneDay',     label:'1 Day',    dur:'1 Day'   },
+    {field:'sevenDays',  label:'7 Days',   dur:'7 Days'  },
+    {field:'tenDays',    label:'10 Days',  dur:'10 Days' },
+    {field:'fifteenDays',label:'15 Days',  dur:'15 Days' },
+    {field:'thirtyDays', label:'30 Days',  dur:'30 Days' },
+    {field:'oneYear',    label:'365 Days', dur:'365 Days'},
   ];
 
   const filtered = allKeys.filter(k => {

@@ -106,12 +106,13 @@ const DeleteModal = ({ soft, onClose, onConfirm, isDeleting }) => {
 // ─── Edit Modal ──────────────────────────────────────────────────────
 const EditModal = ({ soft, onClose, onSave }) => {
   const [form, setForm] = useState({
-    name:    soft.name || '',
-    price1:  soft.prices?.oneDay       || '',
-    price7:  soft.prices?.sevenDays    || '',
-    price15: soft.prices?.fifteenDays  || '',
-    price30: soft.prices?.thirtyDays   || '',
-    price365:soft.prices?.oneYear      || '',
+    name:     soft.name || '',
+    price1:   soft.prices?.oneDay       || '',
+    price7:   soft.prices?.sevenDays    || '',
+    price10:  soft.prices?.tenDays      || '',
+    price15:  soft.prices?.fifteenDays  || '',
+    price30:  soft.prices?.thirtyDays   || '',
+    price365: soft.prices?.oneYear      || '',
   });
   const [image, setImage]               = useState(null);
   const [imagePreview, setImagePreview] = useState(soft.imageUrl || null);
@@ -133,8 +134,7 @@ const EditModal = ({ soft, onClose, onSave }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // At least one price must be set
-    const hasAnyPrice = form.price1 || form.price7 || form.price15 || form.price30 || form.price365;
+    const hasAnyPrice = form.price1 || form.price7 || form.price10 || form.price15 || form.price30 || form.price365;
     if (!hasAnyPrice) {
       alert("Please set at least one pricing plan.");
       return;
@@ -156,6 +156,7 @@ const EditModal = ({ soft, onClose, onSave }) => {
         imageUrl,
         "prices.oneDay":      form.price1   ? parseFloat(form.price1)   : null,
         "prices.sevenDays":   form.price7   ? parseFloat(form.price7)   : null,
+        "prices.tenDays":     form.price10  ? parseFloat(form.price10)  : null,
         "prices.fifteenDays": form.price15  ? parseFloat(form.price15)  : null,
         "prices.thirtyDays":  form.price30  ? parseFloat(form.price30)  : null,
         "prices.oneYear":     form.price365 ? parseFloat(form.price365) : null,
@@ -187,11 +188,12 @@ const EditModal = ({ soft, onClose, onSave }) => {
   };
 
   const pricingFields = [
-    { key: 'ep1',   label: '1 Day ($)',    value: form.price1,   field: 'price1',   required: false },
-    { key: 'ep7',   label: '7 Days ($)',   value: form.price7,   field: 'price7',   required: false },
-    { key: 'ep15',  label: '15 Days ($)',  value: form.price15,  field: 'price15',  required: false },
-    { key: 'ep30',  label: '30 Days ($)',  value: form.price30,  field: 'price30',  required: false },
-    { key: 'ep365', label: '365 Days ($)', value: form.price365, field: 'price365', required: false },
+    { key: 'ep1',   label: '1 Day ($)',    value: form.price1,   field: 'price1'   },
+    { key: 'ep7',   label: '7 Days ($)',   value: form.price7,   field: 'price7'   },
+    { key: 'ep10',  label: '10 Days ($)',  value: form.price10,  field: 'price10'  },
+    { key: 'ep15',  label: '15 Days ($)',  value: form.price15,  field: 'price15'  },
+    { key: 'ep30',  label: '30 Days ($)',  value: form.price30,  field: 'price30'  },
+    { key: 'ep365', label: '365 Days ($)', value: form.price365, field: 'price365' },
   ];
 
   return (
@@ -292,7 +294,7 @@ const EditModal = ({ soft, onClose, onSave }) => {
                 <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'11px', color:'#7c3aed', letterSpacing:'0.12em', fontWeight:500 }}>Pricing Plans</span>
                 <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'11px', color:'rgba(107,114,128,0.5)', fontWeight:300 }}>(at least one required)</span>
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'10px' }}>
                 {pricingFields.map(f => (
                   <div key={f.key}>
                     <label style={{ ...labelStyle }}>
@@ -399,10 +401,11 @@ const Software = () => {
   };
 
   const pricePlans = [
-    { field: 'oneDay',      label: '1 Day',    dur: '1 Day' },
-    { field: 'sevenDays',   label: '7 Days',   dur: '7 Days' },
-    { field: 'fifteenDays', label: '15 Days',  dur: '15 Days' },
-    { field: 'thirtyDays',  label: '30 Days',  dur: '30 Days' },
+    { field: 'oneDay',      label: '1 Day',    dur: '1 Day'    },
+    { field: 'sevenDays',   label: '7 Days',   dur: '7 Days'   },
+    { field: 'tenDays',     label: '10 Days',  dur: '10 Days'  },
+    { field: 'fifteenDays', label: '15 Days',  dur: '15 Days'  },
+    { field: 'thirtyDays',  label: '30 Days',  dur: '30 Days'  },
     { field: 'oneYear',     label: '365 Days', dur: '365 Days' },
   ];
 
