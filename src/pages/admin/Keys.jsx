@@ -65,7 +65,6 @@ const EditKeyModal = ({ keyItem, softwareList, onClose, onSave }) => {
       <div onClick={e=>e.stopPropagation()} style={{ width:'100%', maxWidth:'480px', background:'linear-gradient(160deg,rgba(18,14,38,0.99),rgba(10,8,24,1))', border:'1px solid rgba(124,58,237,0.22)', borderRadius:'22px', boxShadow:'0 40px 100px rgba(0,0,0,0.7)', overflow:'hidden', animation:'slideUp 0.22s cubic-bezier(.16,1,.3,1)', maxHeight:'90vh', overflowY:'auto' }}>
         <div style={{ height:'1px', background:'linear-gradient(90deg,transparent 5%,rgba(124,58,237,0.55) 50%,transparent 95%)' }} />
         <div style={{ padding:'26px 28px 24px' }}>
-          {/* Header */}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'22px' }}>
             <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
               <div style={{ width:'42px', height:'42px', borderRadius:'12px', background:'rgba(129,140,248,0.1)', border:'1px solid rgba(129,140,248,0.22)', display:'flex', alignItems:'center', justifyContent:'center', color:'#818cf8' }}><Edit size={18}/></div>
@@ -78,13 +77,10 @@ const EditKeyModal = ({ keyItem, softwareList, onClose, onSave }) => {
           </div>
 
           <div style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
-            {/* Key */}
             <div>
               <label style={lbl}>License Key</label>
               <input type="text" value={keyVal} onChange={e=>setKeyVal(e.target.value)} onFocus={()=>setFocused('key')} onBlur={()=>setFocused('')} style={inp('key')} placeholder="XXXX-XXXX-XXXX-XXXX"/>
             </div>
-
-            {/* Software */}
             <div>
               <label style={lbl}>Software</label>
               <div style={{ position:'relative' }}>
@@ -96,8 +92,6 @@ const EditKeyModal = ({ keyItem, softwareList, onClose, onSave }) => {
                 </div>
               </div>
             </div>
-
-            {/* Duration */}
             {allPlans.length > 0 && (
               <div>
                 <label style={lbl}>Duration</label>
@@ -112,8 +106,6 @@ const EditKeyModal = ({ keyItem, softwareList, onClose, onSave }) => {
                 </div>
               </div>
             )}
-
-            {/* Status */}
             <div>
               <label style={lbl}>Status</label>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' }}>
@@ -128,7 +120,6 @@ const EditKeyModal = ({ keyItem, softwareList, onClose, onSave }) => {
             </div>
           </div>
 
-          {/* Buttons */}
           <div style={{ display:'flex', gap:'10px', marginTop:'22px' }}>
             <button onClick={onClose} style={{ flex:1, padding:'11px', borderRadius:'10px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', color:'rgba(156,163,175,0.8)', fontSize:'13px', fontFamily:"'DM Sans',sans-serif", fontWeight:500, cursor:'pointer' }}>Cancel</button>
             <button onClick={handleSave} disabled={saving} style={{ flex:1, padding:'11px', borderRadius:'10px', background: saving?'rgba(109,40,217,0.35)':'linear-gradient(135deg,#7c3aed,#4f46e5)', border:'none', color:'white', fontSize:'13px', fontFamily:"'Cinzel',serif", fontWeight:600, letterSpacing:'0.04em', cursor: saving?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:'7px', boxShadow: saving?'none':'0 6px 20px rgba(124,58,237,0.35)', transition:'all 0.2s' }}>
@@ -217,11 +208,25 @@ const Keys = () => {
     {field:'oneYear',    label:'365 Days', dur:'365 Days'},
   ];
 
-  const filtered = allKeys.filter(k => {
-    if (filterSoft!=='all'   && k.softwareId!==filterSoft)   return false;
-    if (filterStatus!=='all' && k.status!==filterStatus)      return false;
-    return true;
-  });
+  // ✅ Sold উপরে (latest first), Available নিচে
+  const filtered = allKeys
+    .filter(k => {
+      if (filterSoft   !== 'all' && k.softwareId !== filterSoft)  return false;
+      if (filterStatus !== 'all' && k.status     !== filterStatus) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      // Sold সবার আগে
+      if (a.status === 'sold' && b.status !== 'sold') return -1;
+      if (a.status !== 'sold' && b.status === 'sold') return 1;
+      // Sold গুলোর মধ্যে সবচেয়ে নতুন purchase সবার উপরে
+      if (a.status === 'sold' && b.status === 'sold') {
+        const aTime = a.soldAt?.toMillis?.() || a.createdAt?.toMillis?.() || 0;
+        const bTime = b.soldAt?.toMillis?.() || b.createdAt?.toMillis?.() || 0;
+        return bTime - aTime;
+      }
+      return 0;
+    });
 
   const badge = (status) => {
     const ok = status==='available';
@@ -264,13 +269,11 @@ const Keys = () => {
 
         <div className="page-inner" style={{ position:'relative', zIndex:1, maxWidth:'1280px', margin:'0 auto', padding:'96px 32px 48px', opacity:mounted?1:0, transform:mounted?'translateY(0)':'translateY(16px)', transition:'opacity 0.5s ease,transform 0.5s ease' }}>
 
-          {/* Back */}
           <button onClick={()=>navigate('/admin')} style={{ display:'flex', alignItems:'center', gap:'6px', background:'none', border:'none', color:'rgba(107,114,128,0.8)', fontSize:'13px', fontFamily:"'DM Sans',sans-serif", cursor:'pointer', marginBottom:'28px', padding:0, transition:'color 0.2s' }}
             onMouseEnter={e=>e.currentTarget.style.color='white'}
             onMouseLeave={e=>e.currentTarget.style.color='rgba(107,114,128,0.8)'}
           ><ArrowLeft size={15}/> Back to Dashboard</button>
 
-          {/* Header */}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'32px', flexWrap:'wrap', gap:'16px' }}>
             <div>
               <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'10px' }}>
@@ -291,7 +294,6 @@ const Keys = () => {
             ><Plus size={15}/> Add Keys</button>
           </div>
 
-          {/* Overview */}
           <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'14px' }}>
             <div style={{ width:'22px', height:'1px', background:'rgba(124,58,237,0.55)' }}/>
             <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'11px', color:'#7c3aed', letterSpacing:'0.12em', fontWeight:500 }}>Software Overview</span>
@@ -326,7 +328,6 @@ const Keys = () => {
             ))}
           </div>
 
-          {/* Table header + filters */}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'14px', flexWrap:'wrap', gap:'12px' }}>
             <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
               <div style={{ width:'22px', height:'1px', background:'rgba(124,58,237,0.55)' }}/>
@@ -350,7 +351,6 @@ const Keys = () => {
             </div>
           </div>
 
-          {/* Table */}
           <div style={{ background:'linear-gradient(145deg,rgba(18,14,38,0.96),rgba(10,8,24,0.98))', border:'1px solid rgba(124,58,237,0.13)', borderRadius:'20px', overflow:'hidden', boxShadow:'0 20px 60px rgba(0,0,0,0.4)', animation:'fadeUp 0.5s ease 0.2s both' }}>
             <div style={{ height:'1px', background:'linear-gradient(90deg,transparent 5%,rgba(124,58,237,0.35) 50%,transparent 95%)' }}/>
             <div style={{ overflowX:'auto' }}>
@@ -366,7 +366,7 @@ const Keys = () => {
                   {filtered.length===0 ? (
                     <tr><td colSpan="6" style={{ padding:'48px', textAlign:'center', fontFamily:"'DM Sans',sans-serif", color:'rgba(107,114,128,0.5)', fontSize:'13px', fontWeight:300 }}>No keys found.</td></tr>
                   ) : filtered.map((k,idx) => (
-                    <tr key={k.id} className="key-row" style={{ borderBottom:'1px solid rgba(124,58,237,0.07)' }}>
+                    <tr key={k.id} className="key-row" style={{ borderBottom:'1px solid rgba(124,58,237,0.07)', background: k.status==='sold' ? 'rgba(248,113,113,0.02)' : 'transparent' }}>
                       <td style={{ padding:'12px 16px', fontFamily:"'DM Sans',sans-serif", fontSize:'12px', color:'rgba(209,213,219,0.85)', fontWeight:500, whiteSpace:'nowrap' }}>{k.softwareName}</td>
                       <td style={{ padding:'12px 16px', fontFamily:"'DM Mono',monospace", fontSize:'12px', color:'#818cf8', letterSpacing:'0.04em', maxWidth:'200px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{k.key}</td>
                       <td style={{ padding:'12px 16px', whiteSpace:'nowrap' }}>
@@ -374,7 +374,7 @@ const Keys = () => {
                       </td>
                       <td style={{ padding:'12px 16px' }}>{badge(k.status)}</td>
                       <td style={{ padding:'12px 16px' }}>
-                        {k.status==='sold'&&k.buyerId ? (
+                        {k.status==='sold' && k.buyerId ? (
                           <div style={{ display:'flex', alignItems:'center', gap:'6px', background:'rgba(129,140,248,0.08)', border:'1px solid rgba(129,140,248,0.2)', borderRadius:'7px', padding:'4px 9px', width:'max-content' }}>
                             <User size={11} color="#818cf8"/>
                             <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'11px', color:'#818cf8', fontWeight:400 }}>{usersMap[k.buyerId]||'Unknown'}</span>
@@ -400,7 +400,6 @@ const Keys = () => {
       {editKey   && <EditKeyModal keyItem={editKey} softwareList={softwareList} onClose={()=>setEditKey(null)} onSave={()=>{setEditKey(null);showToast("Key updated successfully!");}}/>}
       {deleteKey && <DeleteModal  keyItem={deleteKey} onClose={()=>setDeleteKey(null)} onConfirm={handleDel}/>}
 
-      {/* Toast */}
       <div style={{ position:'fixed', bottom:'28px', right:'28px', zIndex:200, display:'flex', alignItems:'center', gap:'10px', background:'linear-gradient(135deg,rgba(5,150,105,0.15),rgba(4,120,87,0.1))', border:'1px solid rgba(52,211,153,0.3)', borderRadius:'12px', padding:'12px 18px', backdropFilter:'blur(12px)', boxShadow:'0 8px 32px rgba(0,0,0,0.4)', opacity:toast.show?1:0, transform:toast.show?'translateY(0)':'translateY(12px)', transition:'all 0.3s ease', pointerEvents:'none' }}>
         <CheckCircle size={16} color="#34d399"/>
         <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'13px', color:'rgba(255,255,255,0.85)', fontWeight:400 }}>{toast.message}</span>
