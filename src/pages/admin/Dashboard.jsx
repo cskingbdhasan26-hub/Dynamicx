@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase/config';
-import { collection, onSnapshot, query, where, orderBy, limit, doc, deleteDoc, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import {
   Users, Package, Key, DollarSign, UserPlus, FilePlus, Database,
-  ShoppingBag, Clock, Trash2, ChevronRight, X, AlertTriangle,
+  ShoppingBag, Clock, Trash2, ChevronRight, X, AlertTriangle, TrendingUp,
 } from 'lucide-react';
 import AdminNavbar from '../../components/AdminNavbar';
 
@@ -14,7 +14,7 @@ const DeleteTxModal = ({ show, onClose, onConfirm }) => {
   return (
     <div onClick={onClose} style={{ position:'fixed', inset:0, zIndex:200, background:'rgba(0,0,0,0.75)', backdropFilter:'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center', padding:'16px', animation:'fadeIn 0.18s ease' }}>
       <div onClick={e=>e.stopPropagation()} style={{ width:'100%', maxWidth:'360px', background:'linear-gradient(160deg,rgba(18,14,38,0.99),rgba(10,8,24,1))', border:'1px solid rgba(248,113,113,0.22)', borderRadius:'20px', boxShadow:'0 40px 100px rgba(0,0,0,0.7)', overflow:'hidden', animation:'slideUp 0.22s cubic-bezier(.16,1,.3,1)' }}>
-        <div style={{ height:'1px', background:'linear-gradient(90deg,transparent 5%,rgba(248,113,113,0.4) 50%,transparent 95%)' }}/>
+        <div style={{ height:'1px', background:'linear-gradient(90deg,transparent 5%,rgba(248,113,113,0.4) 50%,transparent 95%)'}}/>
         <div style={{ padding:'24px 26px 22px' }}>
           <div style={{ display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px' }}>
             <div style={{ width:'42px', height:'42px', borderRadius:'12px', background:'rgba(248,113,113,0.1)', border:'1px solid rgba(248,113,113,0.25)', display:'flex', alignItems:'center', justifyContent:'center', color:'#f87171' }}><Trash2 size={18}/></div>
@@ -37,13 +37,32 @@ const DeleteTxModal = ({ show, onClose, onConfirm }) => {
   );
 };
 
+// ── Transaction Type Config ───────────────────────────────────────────
+const getTxTypeConfig = (tx) => {
+  if (tx.type === 'balance_add') return {
+    label: 'Balance Added',
+    icon: <TrendingUp size={13}/>,
+    color: '#34d399',
+    bg: 'rgba(52,211,153,0.1)',
+    border: 'rgba(52,211,153,0.25)',
+  };
+  if (tx.type === 'balance_reset') return {
+    label: 'Balance Reset',
+    icon: <X size={13}/>,
+    color: '#f87171',
+    bg: 'rgba(248,113,113,0.1)',
+    border: 'rgba(248,113,113,0.25)',
+  };
+  return null;
+};
+
 // ── Admin Dashboard ───────────────────────────────────────────────────
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats]               = useState({ resellers:0, software:0, keys:0, totalBalance:0 });
   const [transactions, setTransactions] = useState([]);
   const [allTransactions, setAllTransactions] = useState([]);
-  const [usersMap, setUsersMap]         = useState({}); // userId -> { email, balance }
+  const [usersMap, setUsersMap]         = useState({});
   const [showAll, setShowAll]           = useState(false);
   const [deleteTx, setDeleteTx]         = useState(null);
   const [mounted, setMounted]           = useState(false);
@@ -58,7 +77,6 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
-    // Stats
     const qUsers = query(collection(db,"users"), where("role","==","reseller"));
     const unsubUsers = onSnapshot(qUsers, snapshot => {
       let activeCount=0, balanceSum=0;
@@ -79,7 +97,6 @@ const AdminDashboard = () => {
     const qKeys = query(collection(db,"keys"), where("status","==","available"));
     const unsubKeys = onSnapshot(qKeys, s => setStats(prev => ({ ...prev, keys:s.size })));
 
-    // All purchases (real-time)
     const unsubAll = onSnapshot(
       query(collection(db,"purchases"), orderBy("createdAt","desc")),
       snap => {
@@ -198,7 +215,6 @@ const AdminDashboard = () => {
           {/* Transaction History */}
           <div style={{ animation:'fadeUp 0.5s ease 0.55s both' }}>
 
-            {/* Section header */}
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'20px', flexWrap:'wrap', gap:'12px' }}>
               <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
                 <div style={{ width:'28px', height:'1px', background:'rgba(124,58,237,0.55)' }}/>
@@ -209,7 +225,7 @@ const AdminDashboard = () => {
                 <div style={{ display:'flex', alignItems:'center', gap:'6px', padding:'5px 12px', borderRadius:'8px', background:'rgba(124,58,237,0.07)', border:'1px solid rgba(124,58,237,0.18)' }}>
                   <Clock size={11} color="#a78bfa"/>
                   <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'11px', color:'#a78bfa', fontWeight:500 }}>
-                    {showAll ? `All ${allTransactions.length}` : 'Latest 10'} purchases
+                    {showAll ? `All ${allTransactions.length}` : 'Latest 10'} records
                   </span>
                 </div>
                 {allTransactions.length > 10 && (
@@ -234,25 +250,28 @@ const AdminDashboard = () => {
                   <table style={{ width:'100%', borderCollapse:'collapse' }}>
                     <thead>
                       <tr style={{ background:'rgba(6,6,18,0.6)' }}>
-                        {['Reseller', 'Balance', 'Software', 'Duration', 'Amount', 'Date', ''].map((h,i) => (
+                        {['Reseller', 'Balance', 'Type / Software', 'Duration', 'Amount', 'Date', ''].map((h,i) => (
                           <th key={i} style={{ padding:'12px 16px', fontFamily:"'DM Sans',sans-serif", fontSize:'10px', fontWeight:500, color:'rgba(107,114,128,0.65)', letterSpacing:'0.1em', textTransform:'uppercase', borderBottom:'1px solid rgba(124,58,237,0.1)', textAlign: i===6?'right':'left', whiteSpace:'nowrap' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {displayedTx.map((tx, idx) => {
+                        const txConfig = getTxTypeConfig(tx);
+                        const isBalanceTx = !!txConfig;
                         const dc = durationColor(tx.duration);
                         const userInfo = usersMap[tx.userId] || {};
                         const email = tx.email || userInfo.email || 'Unknown';
                         const balance = userInfo.balance;
+
                         return (
-                          <tr key={tx.id} className="tx-row" style={{ borderBottom: idx < displayedTx.length-1 ? '1px solid rgba(124,58,237,0.07)':'none' }}>
+                          <tr key={tx.id} className="tx-row" style={{ borderBottom: idx < displayedTx.length-1 ? '1px solid rgba(124,58,237,0.07)':'none', background: isBalanceTx ? 'rgba(52,211,153,0.015)' : 'transparent' }}>
 
                             {/* Reseller */}
                             <td style={{ padding:'13px 16px', whiteSpace:'nowrap' }}>
                               <div style={{ display:'flex', alignItems:'center', gap:'9px' }}>
-                                <div style={{ width:'30px', height:'30px', borderRadius:'8px', background:'rgba(124,58,237,0.1)', border:'1px solid rgba(124,58,237,0.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                                  <span style={{ fontFamily:"'Cinzel',serif", fontSize:'12px', fontWeight:700, color:'#a78bfa' }}>{(email||'?')[0].toUpperCase()}</span>
+                                <div style={{ width:'30px', height:'30px', borderRadius:'8px', background: isBalanceTx ? txConfig.bg : 'rgba(124,58,237,0.1)', border:`1px solid ${isBalanceTx ? txConfig.border : 'rgba(124,58,237,0.2)'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                                  <span style={{ fontFamily:"'Cinzel',serif", fontSize:'12px', fontWeight:700, color: isBalanceTx ? txConfig.color : '#a78bfa' }}>{(email||'?')[0].toUpperCase()}</span>
                                 </div>
                                 <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'12px', color:'rgba(209,213,219,0.85)', fontWeight:400 }}>{email}</span>
                               </div>
@@ -267,27 +286,44 @@ const AdminDashboard = () => {
                               )}
                             </td>
 
-                            {/* Software */}
+                            {/* ✅ Type / Software */}
                             <td style={{ padding:'13px 16px', whiteSpace:'nowrap' }}>
-                              <div style={{ display:'flex', alignItems:'center', gap:'7px' }}>
-                                {tx.imageUrl
-                                  ? <img src={tx.imageUrl} alt="" style={{ width:'22px', height:'22px', borderRadius:'5px', objectFit:'cover', flexShrink:0 }}/>
-                                  : <Package size={14} color="rgba(107,114,128,0.5)"/>
-                                }
-                                <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'12px', color:'rgba(209,213,219,0.85)', fontWeight:500 }}>{tx.softwareName}</span>
-                              </div>
+                              {isBalanceTx ? (
+                                <div style={{ display:'inline-flex', alignItems:'center', gap:'7px', background:txConfig.bg, border:`1px solid ${txConfig.border}`, borderRadius:'8px', padding:'5px 11px' }}>
+                                  <span style={{ color:txConfig.color, display:'flex', alignItems:'center' }}>{txConfig.icon}</span>
+                                  <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'12px', color:txConfig.color, fontWeight:600 }}>{txConfig.label}</span>
+                                </div>
+                              ) : (
+                                <div style={{ display:'flex', alignItems:'center', gap:'7px' }}>
+                                  {tx.imageUrl
+                                    ? <img src={tx.imageUrl} alt="" style={{ width:'22px', height:'22px', borderRadius:'5px', objectFit:'cover', flexShrink:0 }}/>
+                                    : <Package size={14} color="rgba(107,114,128,0.5)"/>
+                                  }
+                                  <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'12px', color:'rgba(209,213,219,0.85)', fontWeight:500 }}>{tx.softwareName}</span>
+                                </div>
+                              )}
                             </td>
 
                             {/* Duration */}
                             <td style={{ padding:'13px 16px' }}>
-                              <span style={{ display:'inline-flex', alignItems:'center', fontFamily:"'DM Sans',sans-serif", fontSize:'11px', fontWeight:600, color:dc, background:`${dc}18`, border:`1px solid ${dc}35`, borderRadius:'6px', padding:'3px 9px' }}>
-                                {tx.duration}
-                              </span>
+                              {isBalanceTx ? (
+                                <span style={{ color:'rgba(107,114,128,0.35)', fontSize:'13px' }}>—</span>
+                              ) : (
+                                <span style={{ display:'inline-flex', alignItems:'center', fontFamily:"'DM Sans',sans-serif", fontSize:'11px', fontWeight:600, color:dc, background:`${dc}18`, border:`1px solid ${dc}35`, borderRadius:'6px', padding:'3px 9px' }}>
+                                  {tx.duration}
+                                </span>
+                              )}
                             </td>
 
-                            {/* Amount */}
+                            {/* ✅ Amount */}
                             <td style={{ padding:'13px 16px', whiteSpace:'nowrap' }}>
-                              <span style={{ fontFamily:"'Cinzel',serif", fontSize:'13px', fontWeight:700, color:'#34d399' }}>${tx.price?.toFixed(2)}</span>
+                              {tx.type === 'balance_reset' ? (
+                                <span style={{ fontFamily:"'Cinzel',serif", fontSize:'13px', fontWeight:700, color:'#f87171' }}>Reset $0</span>
+                              ) : tx.type === 'balance_add' ? (
+                                <span style={{ fontFamily:"'Cinzel',serif", fontSize:'13px', fontWeight:700, color:'#34d399' }}>+${tx.price?.toFixed(2)}</span>
+                              ) : (
+                                <span style={{ fontFamily:"'Cinzel',serif", fontSize:'13px', fontWeight:700, color:'#34d399' }}>${tx.price?.toFixed(2)}</span>
+                              )}
                             </td>
 
                             {/* Date */}
@@ -314,7 +350,6 @@ const AdminDashboard = () => {
               )}
             </div>
 
-            {/* View all / show less footer */}
             {allTransactions.length > 10 && (
               <div style={{ textAlign:'center', marginTop:'14px' }}>
                 <button onClick={()=>setShowAll(v=>!v)} style={{ display:'inline-flex', alignItems:'center', gap:'6px', padding:'8px 20px', borderRadius:'10px', background:'rgba(124,58,237,0.08)', border:'1px solid rgba(124,58,237,0.2)', color:'#a78bfa', fontSize:'12px', fontFamily:"'DM Sans',sans-serif", fontWeight:500, cursor:'pointer', transition:'all 0.2s' }}

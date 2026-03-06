@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase/config';
-import { collection, onSnapshot, doc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, deleteDoc, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, UserCheck, UserX, Trash2, Users as UsersIcon, DollarSign, X, AlertTriangle, CheckCircle, Search } from 'lucide-react';
 import AdminNavbar from '../../components/AdminNavbar';
@@ -186,20 +186,48 @@ const Users = () => {
     setConfirmModal({ show:false, type:'', user:null });
   };
 
+  // ✅ Balance add + transaction record
   const handleAddBalance = async (amount) => {
     const user = balanceModal.user;
     try {
       const newBalance = (user.balance || 0) + amount;
       await updateDoc(doc(db, "users", user.id), { balance: newBalance });
+
+      // Transaction history তে record করো
+      await addDoc(collection(db, "purchases"), {
+        userId: user.id,
+        email: user.email,
+        softwareName: "Balance Added",
+        imageUrl: null,
+        duration: "—",
+        price: amount,
+        type: "balance_add",
+        createdAt: serverTimestamp(),
+      });
+
       showToast(`Added $${amount.toFixed(2)} to ${user.email}`);
     } catch (err) { alert("Error: " + err.message); }
     setBalanceModal({ show:false, user:null });
   };
 
+  // ✅ Reset to zero + transaction record
   const handleSetZero = async () => {
     const user = balanceModal.user;
     try {
       await updateDoc(doc(db, "users", user.id), { balance: 0 });
+
+      // Reset record করো
+      await addDoc(collection(db, "purchases"), {
+        userId: user.id,
+        email: user.email,
+        softwareName: "Balance Reset",
+        imageUrl: null,
+        duration: "—",
+        price: 0,
+        type: "balance_reset",
+        createdAt: serverTimestamp(),
+      });
+
       showToast(`Balance reset to $0.00 for ${user.email}`);
     } catch (err) { alert("Error: " + err.message); }
     setBalanceModal({ show:false, user:null });
@@ -359,7 +387,6 @@ const Users = () => {
                           <div style={{ width:'32px', height:'32px', borderRadius:'9px', background:'rgba(124,58,237,0.1)', border:'1px solid rgba(124,58,237,0.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                             <span style={{ fontFamily:"'Cinzel',serif", fontSize:'13px', fontWeight:700, color:'#a78bfa' }}>{user.email?.[0]?.toUpperCase()}</span>
                           </div>
-                          {/* Highlight matching text */}
                           <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'13px', color:'rgba(255,255,255,0.85)', fontWeight:400 }}>
                             {searchQuery ? (() => {
                               const idx = user.email.toLowerCase().indexOf(searchQuery.toLowerCase());

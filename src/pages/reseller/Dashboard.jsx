@@ -49,12 +49,24 @@ const ResellerDashboard = () => {
           const kList = snapshot.docs.map(d => d.data());
           setAvailableKeys(kList.filter(k => k.status === "available"));
         });
-        const qPurchases = query(collection(db, "purchases"), where("userId", "==", user.uid));
+
+        // ✅ শুধু actual purchases দেখাবে — balance_add ও balance_reset বাদ দেবে
+        const qPurchases = query(
+          collection(db, "purchases"),
+          where("userId", "==", user.uid)
+        );
         const unsubPurchases = onSnapshot(qPurchases, (snapshot) => {
-          const pList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          const pList = snapshot.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(p => 
+            p.type !== 'balance_add' && 
+            p.type !== 'balance_reset' &&
+            p.key // ✅ key field না থাকলে দেখাবে না
+          );
           pList.sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis());
           setPurchases(pList);
         });
+
         return () => { unsubUser(); unsubSoft(); unsubKeys(); unsubPurchases(); };
       } else {
         navigate('/');
@@ -114,6 +126,7 @@ const ResellerDashboard = () => {
         key: keyData.key,
         imageUrl: software.imageUrl || "",
         createdAt: serverTimestamp()
+        // type field নেই = normal purchase
       });
       setConfirmModal({ type: 'success', key: keyData.key, softwareName: software.name });
       setActiveTab('purchases');
@@ -132,7 +145,6 @@ const ResellerDashboard = () => {
     }
   };
 
-  // ── Fixed: all durations supported ──────────────────────────────────
   const getExpiryInfo = (createdAt, duration) => {
     if (!createdAt) return null;
     const daysMap = {
@@ -171,7 +183,6 @@ const ResellerDashboard = () => {
     { icon: <ExternalLink size={14} />,  label: 'Discord Server', value: 'Join Server →',   color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)', href: 'https://discord.gg/aXB7HUsHT7', clickable: true  },
   ];
 
-  // ── All price plans in correct order ────────────────────────────────
   const allPricePlans = [
     { field: 'oneDay',      duration: '1 Day'    },
     { field: 'sevenDays',   duration: '7 Days'   },
@@ -462,7 +473,6 @@ const ResellerDashboard = () => {
                               )}
                             </div>
                           </div>
-                          {/* Delete button */}
                           <button
                             onClick={() => handleDeletePurchase(item.id)}
                             className="del-btn"
