@@ -133,6 +133,12 @@ const EditModal = ({ soft, onClose, onSave }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // At least one price must be set
+    const hasAnyPrice = form.price1 || form.price7 || form.price15 || form.price30 || form.price365;
+    if (!hasAnyPrice) {
+      alert("Please set at least one pricing plan.");
+      return;
+    }
     setIsLoading(true);
     try {
       let imageUrl = soft.imageUrl;
@@ -181,7 +187,7 @@ const EditModal = ({ soft, onClose, onSave }) => {
   };
 
   const pricingFields = [
-    { key: 'ep1',   label: '1 Day ($)',    value: form.price1,   field: 'price1',   required: true },
+    { key: 'ep1',   label: '1 Day ($)',    value: form.price1,   field: 'price1',   required: false },
     { key: 'ep7',   label: '7 Days ($)',   value: form.price7,   field: 'price7',   required: false },
     { key: 'ep15',  label: '15 Days ($)',  value: form.price15,  field: 'price15',  required: false },
     { key: 'ep30',  label: '30 Days ($)',  value: form.price30,  field: 'price30',  required: false },
@@ -266,7 +272,7 @@ const EditModal = ({ soft, onClose, onSave }) => {
                 </div>
               </div>
               <div style={{ flex: 1 }}>
-                <label style={labelStyle}>Software Name</label>
+                <label style={labelStyle}>Software Name <span style={{ color:'#f87171', marginLeft:'2px' }}>*</span></label>
                 <input
                   type="text" value={form.name}
                   onChange={e => setForm({...form, name: e.target.value})}
@@ -284,12 +290,13 @@ const EditModal = ({ soft, onClose, onSave }) => {
               <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'14px' }}>
                 <div style={{ width:'20px', height:'1px', background:'rgba(124,58,237,0.55)' }} />
                 <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'11px', color:'#7c3aed', letterSpacing:'0.12em', fontWeight:500 }}>Pricing Plans</span>
+                <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'11px', color:'rgba(107,114,128,0.5)', fontWeight:300 }}>(at least one required)</span>
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px' }}>
                 {pricingFields.map(f => (
                   <div key={f.key}>
-                    <label style={{ ...labelStyle, color: f.required ? 'rgba(167,139,250,0.85)' : labelStyle.color }}>
-                      {f.label}{f.required && <span style={{ color:'#f87171', marginLeft:'2px' }}>*</span>}
+                    <label style={{ ...labelStyle }}>
+                      {f.label}
                     </label>
                     <input
                       type="number" step="0.01" min="0"
@@ -297,7 +304,6 @@ const EditModal = ({ soft, onClose, onSave }) => {
                       value={f.value}
                       onChange={e => setForm({...form, [f.field]: e.target.value})}
                       onFocus={() => setFocused(f.key)} onBlur={() => setFocused('')}
-                      required={f.required}
                       style={inputStyle(f.key)}
                       className="as-input"
                     />

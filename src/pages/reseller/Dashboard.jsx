@@ -132,13 +132,20 @@ const ResellerDashboard = () => {
     }
   };
 
+  // ── Fixed: all durations supported ──────────────────────────────────
   const getExpiryInfo = (createdAt, duration) => {
     if (!createdAt) return null;
-    const daysMap = { '1 Day': 1, '7 Days': 7, '30 Days': 30 };
+    const daysMap = {
+      '1 Day':    1,
+      '7 Days':   7,
+      '15 Days':  15,
+      '30 Days':  30,
+      '365 Days': 365,
+    };
     const days = daysMap[duration];
     if (!days) return null;
     const expiry = createdAt.toMillis() + days * 24 * 60 * 60 * 1000;
-    const diff = expiry - Date.now();
+    const diff   = expiry - Date.now();
     if (diff <= 0) return { expired: true, label: 'Expired' };
     const hoursLeft = Math.floor(diff / (1000 * 60 * 60));
     const daysLeft  = Math.floor(hoursLeft / 24);
@@ -161,6 +168,15 @@ const ResellerDashboard = () => {
     { icon: <Phone size={14} />,         label: 'Contact',        value: '+880 1623756042', color: '#34d399', bg: 'rgba(52,211,153,0.1)',  border: 'rgba(52,211,153,0.25)',  href: null,                            clickable: false },
     { icon: <MessageCircle size={14} />, label: 'Discord',        value: 'Shadow_999x',     color: '#818cf8', bg: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.25)', href: null,                            clickable: false },
     { icon: <ExternalLink size={14} />,  label: 'Discord Server', value: 'Join Server →',   color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)', href: 'https://discord.gg/aXB7HUsHT7', clickable: true  },
+  ];
+
+  // ── All price plans in correct order ────────────────────────────────
+  const allPricePlans = [
+    { field: 'oneDay',      duration: '1 Day'   },
+    { field: 'sevenDays',   duration: '7 Days'  },
+    { field: 'fifteenDays', duration: '15 Days' },
+    { field: 'thirtyDays',  duration: '30 Days' },
+    { field: 'oneYear',     duration: '365 Days'},
   ];
 
   return (
@@ -238,7 +254,7 @@ const ResellerDashboard = () => {
                 <Zap size={16} color="white" fill="white" />
               </div>
               <span className="rd-logo-text" style={{ fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:'17px', color:'white', letterSpacing:'0.05em' }}>
-                DYNAMIX<span style={{ color:'#7c3aed' }}>X</span>
+                DYNAMIC<span style={{ color:'#7c3aed' }}>X</span>
               </span>
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
@@ -363,45 +379,51 @@ const ResellerDashboard = () => {
                   <p style={{ margin:0, fontSize:'13px' }}>No software available at the moment.</p>
                 </div>
               )}
-              {softwareList.map((soft, si) => (
-                <div key={soft.id} className="rd-card" style={{ background:'linear-gradient(145deg,rgba(18,14,38,0.96),rgba(10,8,24,0.98))', border:'1px solid rgba(124,58,237,0.13)', borderRadius:'18px', overflow:'hidden', boxShadow:'0 8px 28px rgba(0,0,0,0.3)', animation:`fadeUp 0.5s ease ${si*0.07}s both` }}>
-                  <div style={{ padding:'18px 22px', borderBottom:'1px solid rgba(55,48,80,0.45)', display:'flex', alignItems:'center', gap:'14px' }}>
-                    <div style={{ width:'50px', height:'50px', borderRadius:'12px', background:'rgba(124,58,237,0.08)', border:'1px solid rgba(124,58,237,0.18)', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', flexShrink:0 }}>
-                      {soft.imageUrl ? <img src={soft.imageUrl} alt={soft.name} style={{ width:'100%', height:'100%', objectFit:'contain' }} /> : <Package size={20} color="#7c3aed" />}
+              {softwareList.map((soft, si) => {
+                // Build plan list dynamically — only show plans that have a price set
+                const plans = allPricePlans
+                  .map(p => soft.prices?.[p.field] ? { duration: p.duration, price: soft.prices[p.field] } : null)
+                  .filter(Boolean);
+
+                return (
+                  <div key={soft.id} className="rd-card" style={{ background:'linear-gradient(145deg,rgba(18,14,38,0.96),rgba(10,8,24,0.98))', border:'1px solid rgba(124,58,237,0.13)', borderRadius:'18px', overflow:'hidden', boxShadow:'0 8px 28px rgba(0,0,0,0.3)', animation:`fadeUp 0.5s ease ${si*0.07}s both` }}>
+                    <div style={{ padding:'18px 22px', borderBottom:'1px solid rgba(55,48,80,0.45)', display:'flex', alignItems:'center', gap:'14px' }}>
+                      <div style={{ width:'50px', height:'50px', borderRadius:'12px', background:'rgba(124,58,237,0.08)', border:'1px solid rgba(124,58,237,0.18)', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', flexShrink:0 }}>
+                        {soft.imageUrl ? <img src={soft.imageUrl} alt={soft.name} style={{ width:'100%', height:'100%', objectFit:'contain' }} /> : <Package size={20} color="#7c3aed" />}
+                      </div>
+                      <div>
+                        <h3 style={{ fontFamily:"'Cinzel',serif", fontSize:'15px', fontWeight:600, color:'white', margin:'0 0 3px', letterSpacing:'0.03em' }}>{soft.name}</h3>
+                        <span style={{ fontSize:'11px', color:'rgba(107,114,128,0.6)', fontWeight:300 }}>License Keys Available</span>
+                      </div>
                     </div>
                     <div>
-                      <h3 style={{ fontFamily:"'Cinzel',serif", fontSize:'15px', fontWeight:600, color:'white', margin:'0 0 3px', letterSpacing:'0.03em' }}>{soft.name}</h3>
-                      <span style={{ fontSize:'11px', color:'rgba(107,114,128,0.6)', fontWeight:300 }}>License Keys Available</span>
+                      {plans.map((item, idx) => {
+                        const count = getKeyCount(soft.id, item.duration);
+                        return (
+                          <div key={item.duration} className="rd-price-row" style={{ padding:'14px 22px', borderBottom:idx<plans.length-1 ? '1px solid rgba(55,48,80,0.3)' : 'none', display:'flex', alignItems:'center', justifyContent:'space-between', gap:'16px' }}>
+                            <div>
+                              <p style={{ fontWeight:600, color:'white', margin:'0 0 3px', fontSize:'14px' }}>{item.duration}</p>
+                              <p style={{ fontSize:'11px', color:count>0 ? '#34d399' : '#f87171', margin:0, fontWeight:400 }}>
+                                {count>0 ? `${count} keys in stock` : 'Out of stock'}
+                              </p>
+                            </div>
+                            <div className="rd-price-right" style={{ display:'flex', alignItems:'center', gap:'14px' }}>
+                              <span style={{ fontFamily:"'Cinzel',serif", fontSize:'17px', fontWeight:700, color:'white' }}>${item.price.toFixed(2)}</span>
+                              <button onClick={() => handleBuyNow(soft, item.duration, item.price)} disabled={isBuying||count===0} className="buy-btn"
+                                style={{ display:'flex', alignItems:'center', gap:'7px', padding:'9px 18px', borderRadius:'10px', background:count===0 ? 'rgba(55,48,80,0.35)' : 'linear-gradient(135deg,#34d399,#059669)', color:'white', fontSize:'13px', fontWeight:600, boxShadow:count>0 ? '0 4px 14px rgba(52,211,153,0.3)' : 'none', letterSpacing:'0.02em' }}>
+                                <ShoppingCart size={13}/> Buy Now
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {plans.length === 0 && (
+                        <div style={{ padding:'18px 22px', color:'rgba(107,114,128,0.45)', fontSize:'13px', fontWeight:300 }}>No pricing plans available.</div>
+                      )}
                     </div>
                   </div>
-                  <div>
-                    {[
-                      soft.prices?.oneDay     && { duration:'1 Day',   price:soft.prices.oneDay },
-                      soft.prices?.sevenDays  && { duration:'7 Days',  price:soft.prices.sevenDays },
-                      soft.prices?.thirtyDays && { duration:'30 Days', price:soft.prices.thirtyDays },
-                    ].filter(Boolean).map((item, idx, arr) => {
-                      const count = getKeyCount(soft.id, item.duration);
-                      return (
-                        <div key={item.duration} className="rd-price-row" style={{ padding:'14px 22px', borderBottom:idx<arr.length-1 ? '1px solid rgba(55,48,80,0.3)' : 'none', display:'flex', alignItems:'center', justifyContent:'space-between', gap:'16px' }}>
-                          <div>
-                            <p style={{ fontWeight:600, color:'white', margin:'0 0 3px', fontSize:'14px' }}>{item.duration}</p>
-                            <p style={{ fontSize:'11px', color:count>0 ? '#34d399' : '#f87171', margin:0, fontWeight:400 }}>
-                              {count>0 ? `${count} keys in stock` : 'Out of stock'}
-                            </p>
-                          </div>
-                          <div className="rd-price-right" style={{ display:'flex', alignItems:'center', gap:'14px' }}>
-                            <span style={{ fontFamily:"'Cinzel',serif", fontSize:'17px', fontWeight:700, color:'white' }}>${item.price.toFixed(2)}</span>
-                            <button onClick={() => handleBuyNow(soft, item.duration, item.price)} disabled={isBuying||count===0} className="buy-btn"
-                              style={{ display:'flex', alignItems:'center', gap:'7px', padding:'9px 18px', borderRadius:'10px', background:count===0 ? 'rgba(55,48,80,0.35)' : 'linear-gradient(135deg,#34d399,#059669)', color:'white', fontSize:'13px', fontWeight:600, boxShadow:count>0 ? '0 4px 14px rgba(52,211,153,0.3)' : 'none', letterSpacing:'0.02em' }}>
-                              <ShoppingCart size={13}/> Buy Now
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

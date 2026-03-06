@@ -55,26 +55,37 @@ const AddSoftware = () => {
 
   const handleAddSoftware = async (e) => {
     e.preventDefault();
-    if (!name || !price1 || !image) {
-      alert("Please provide Software Name, 1-Day Price, and an Image.");
+    // ── Only name is required now ──
+    if (!name) {
+      alert("Please provide a Software Name.");
+      return;
+    }
+    // At least one price must be set
+    if (!price1 && !price7 && !price15 && !price30 && !price365) {
+      alert("Please set at least one pricing plan.");
       return;
     }
     setIsLoading(true);
     try {
-      // 1. Upload to Cloudinary
-      const formData = new FormData();
-      formData.append("file", image);
-      formData.append("upload_preset", UPLOAD_PRESET);
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
-      const data = await res.json();
-      if (!data.secure_url) throw new Error("Image upload failed. Check Cloudinary settings.");
+      let imageUrl = null;
 
-      // 2. Save to Firestore
+      // Upload image only if provided
+      if (image) {
+        const formData = new FormData();
+        formData.append("file", image);
+        formData.append("upload_preset", UPLOAD_PRESET);
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
+        const data = await res.json();
+        if (!data.secure_url) throw new Error("Image upload failed. Check Cloudinary settings.");
+        imageUrl = data.secure_url;
+      }
+
+      // Save to Firestore
       await addDoc(collection(db, "software"), {
         name,
-        imageUrl: data.secure_url,
+        imageUrl,
         prices: {
-          oneDay:      parseFloat(price1),
+          oneDay:      price1   ? parseFloat(price1)   : null,
           sevenDays:   price7   ? parseFloat(price7)   : null,
           fifteenDays: price15  ? parseFloat(price15)  : null,
           thirtyDays:  price30  ? parseFloat(price30)  : null,
@@ -112,7 +123,7 @@ const AddSoftware = () => {
   };
 
   const pricingFields = [
-    { key: 'p1',   label: '1 Day ($)',   value: price1,   setter: setPrice1,   required: true },
+    { key: 'p1',   label: '1 Day ($)',   value: price1,   setter: setPrice1,   required: false },
     { key: 'p7',   label: '7 Days ($)',  value: price7,   setter: setPrice7,   required: false },
     { key: 'p15',  label: '15 Days ($)', value: price15,  setter: setPrice15,  required: false },
     { key: 'p30',  label: '30 Days ($)', value: price30,  setter: setPrice30,  required: false },
@@ -216,7 +227,7 @@ const AddSoftware = () => {
 
                 {/* Image Upload */}
                 <div className="image-col" style={{ width: '220px', flexShrink: 0 }}>
-                  <label style={labelStyle}>Software Icon</label>
+                  <label style={labelStyle}>Software Icon <span style={{ color:'rgba(107,114,128,0.5)', fontWeight:300 }}>(optional)</span></label>
                   <div
                     onDragOver={e => { e.preventDefault(); setDragOver(true); }}
                     onDragLeave={() => setDragOver(false)}
@@ -271,7 +282,7 @@ const AddSoftware = () => {
 
                 {/* Name field */}
                 <div className="fields-col" style={{ flex: 1 }}>
-                  <label style={labelStyle}>Software Name</label>
+                  <label style={labelStyle}>Software Name <span style={{ color:'#f87171', marginLeft:'2px' }}>*</span></label>
                   <input
                     type="text"
                     className="as-input"
@@ -293,7 +304,7 @@ const AddSoftware = () => {
                   }}>
                     <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'12px', color:'rgba(167,139,250,0.7)', margin:'0 0 6px', fontWeight:500 }}>💡 Pricing Tips</p>
                     <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'11px', color:'rgba(107,114,128,0.7)', margin:0, lineHeight:1.7, fontWeight:300 }}>
-                      Only <strong style={{color:'rgba(167,139,250,0.8)'}}>1 Day</strong> price is required. Leave other fields empty if you don't want to offer that plan.
+                      Set <strong style={{color:'rgba(167,139,250,0.8)'}}>any pricing plan</strong> you want. Leave fields empty to hide that plan from resellers. At least one plan is required.
                     </p>
                   </div>
                 </div>
@@ -307,17 +318,14 @@ const AddSoftware = () => {
                 <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'18px' }}>
                   <div style={{ width:'22px', height:'1px', background:'rgba(124,58,237,0.55)' }} />
                   <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'11px', color:'#7c3aed', letterSpacing:'0.12em', fontWeight:500 }}>Pricing Plans</span>
+                  <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'11px', color:'rgba(107,114,128,0.5)', fontWeight:300 }}>(at least one required)</span>
                 </div>
 
                 <div className="price-grid" style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'12px' }}>
                   {pricingFields.map(field => (
                     <div key={field.key}>
-                      <label style={{
-                        ...labelStyle,
-                        color: field.required ? 'rgba(167,139,250,0.85)' : 'rgba(156,163,175,0.7)',
-                      }}>
+                      <label style={{ ...labelStyle, color: 'rgba(156,163,175,0.7)' }}>
                         {field.label}
-                        {field.required && <span style={{ color:'#f87171', marginLeft:'3px' }}>*</span>}
                       </label>
                       <input
                         type="number"
@@ -328,7 +336,6 @@ const AddSoftware = () => {
                         onChange={e => field.setter(e.target.value)}
                         onFocus={() => setFocused(field.key)}
                         onBlur={() => setFocused('')}
-                        required={field.required}
                         style={inputStyle(field.key)}
                       />
                     </div>

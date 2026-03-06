@@ -83,7 +83,7 @@ const AdminNavbar = () => {
               <Zap size={16} color="white" fill="white" />
             </div>
             <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: '17px', color: 'white', letterSpacing: '0.05em' }}>
-              DYNAMIX<span style={{ color: '#7c3aed' }}>X</span>
+              DYNAMIC<span style={{ color: '#7c3aed' }}>X</span>
             </span>
           </div>
 
