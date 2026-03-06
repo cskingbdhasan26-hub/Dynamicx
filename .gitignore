@@ -1,0 +1,12 @@
+# Environment variables — NEVER commit this
+.env
+.env.local
+.env.production
+.env.development
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/

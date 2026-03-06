@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Dynamicx</title>
+    <style>
+      * {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+      input, textarea {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Disable right click
+      document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+      });
+
+      // Disable Ctrl+Scroll zoom
+      document.addEventListener('wheel', function(e) {
+        if (e.ctrlKey) e.preventDefault();
+      }, { passive: false });
+
+      // Disable Ctrl+Plus, Ctrl+Minus, Ctrl+0 zoom
+      document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) {
+          e.preventDefault();
+        }
+      });
+
+      // Disable pinch zoom (touch)
+      document.addEventListener('touchstart', function(e) {
+        if (e.touches.length > 1) e.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener('touchmove', function(e) {
+        if (e.touches.length > 1) e.preventDefault();
+      }, { passive: false });
+    </script>
+  </body>
+</html>
