@@ -62,7 +62,9 @@
 
       // ── DevTools open detection ──────────────────────
       (function() {
-        const threshold = 160;
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const threshold = isMobile ? 500 : 160;
+
         setInterval(function() {
           if (
             window.outerWidth - window.innerWidth > threshold ||
